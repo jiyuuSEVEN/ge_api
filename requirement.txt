@@ -1,0 +1,9 @@
+numpy
+pandas
+flask
+python-dotenv
+sqlalchemy
+pandas
+pymysql
+openpyxl
+xlrd
