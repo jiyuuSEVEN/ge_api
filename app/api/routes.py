@@ -14,7 +14,7 @@ def upload_file():
     iepf2controller = IEPF2Controller()
     file_paths = []
     if request.method == 'POST':
-        file_type = request.form.get("file_type")
+        file_type = request.form.get("fileType")
         files = request.files.getlist("file")
         if file_type == 'iepf2':
             for f in files: 

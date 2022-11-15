@@ -11,9 +11,9 @@
 
 <div class="container mt-3">
   <h2>FILE UPLOAD</h2>
-  <form action="/api/uploader" method="post">
+  <form action="/api/uploader" method=post enctype=multipart/form-data>
     <div class="mb-3 mt-3">
-      <select class="form-control" name="file_type" placeholder="file type" id="" required>
+      <select class="form-control" name="fileType" placeholder="file type" id="fileType" required>
         <option value="iepf2">IEPF2</option>
       </select>
     </div>
