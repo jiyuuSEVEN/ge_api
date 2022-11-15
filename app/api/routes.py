@@ -15,11 +15,11 @@ def upload_file():
     file_paths = []
     if request.method == 'POST':
         file_type = request.form.get("file_type")
-        files = request.files.getlist("file[]")
+        files = request.files.getlist("file")
         if file_type == 'iepf2':
             for f in files: 
                 f.save(UPLOAD_PATH+file_type + "/" + f.filename)
-                file_paths.append(UPLOAD_PATH+file_type + "/" + f.filename)
+                file_paths.append(UPLOAD_PATH + file_type + "/" + f.filename)
             result = iepf2controller.insert(file_paths)
         else:
             result = { "data": [], "message": "wrong file type"} 

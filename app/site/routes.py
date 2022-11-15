@@ -1,7 +1,7 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, render_template
 
-site = Blueprint('site', __name__)
+site = Blueprint('site', __name__, template_folder='templates')
 
 @site.route('/')
 def index():
-    return '<h1>Hello world!</h1>'
+    return render_template('index.html')
