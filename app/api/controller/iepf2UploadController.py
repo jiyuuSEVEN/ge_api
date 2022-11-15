@@ -40,7 +40,8 @@ class IEPF2Controller:
                             change_columns[columns[i]] = self.db_columns[i]
 
                         excel_data.rename(columns = change_columns, inplace = True)
-
+                        excel_data[self.db_columns[15]] = pd.to_datetime(excel_data[self.db_columns[15]])
+                        
                         result = self.iepf2model.insert(excel_data)
 
                         results.append({'file' : fp, 'status' : 'File uploaded successfully', 'data' : result})

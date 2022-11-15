@@ -1,5 +1,5 @@
 from flask import Blueprint, request
-from ..controller.iepf2UploadController import IEPF2Controller
+from .controller.iepf2UploadController import IEPF2Controller
 from dotenv import load_dotenv
 import os
 

@@ -1,4 +1,4 @@
-from app.model.dbConnection import get_connection
+from .dbConnection import get_connection
 
 class IEPF2Model:
     def __init__(self):
