@@ -16,11 +16,13 @@ def upload_file():
     if request.method == 'POST':
         file_type = request.form.get("fileType")
         files = request.files.getlist("file")
+
         if file_type == 'iepf2':
             for f in files: 
                 f.save(UPLOAD_PATH+file_type + "/" + f.filename)
                 file_paths.append(UPLOAD_PATH + file_type + "/" + f.filename)
-            result = iepf2controller.insert(file_paths)
+            result = iepf2controller.insert_excel_data(file_paths, file_type)
         else:
             result = { "data": [], "message": "wrong file type"} 
+
         return result
