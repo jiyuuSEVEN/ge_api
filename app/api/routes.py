@@ -16,6 +16,10 @@ def upload_file():
     if request.method == 'POST':
         file_type = request.form.get("fileType")
         files = request.files.getlist("file")
+        
+        if files[0].filename == '':
+            result = { "data": [], "message": "No file selected"}
+            return result
 
         if file_type == 'iepf2':
             for f in files: 
