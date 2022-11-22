@@ -59,7 +59,7 @@ class IEPF2Controller:
                     log_result = self.insert_excel_log(fp.split("/")[-1], file_type, 'admin')
                     processer_result = self.iepf2model.iepf2_processer(fp.split("/")[-1])
 
-                    results.append({'file' : fp, 'status' : 'File uploaded successfully', 'data' : [result, log_result]})
+                    results.append({'file' : fp, 'status' : 'File uploaded successfully', 'data' : [result, log_result, processer_result.to_dict('list')]})
 
                 except (ValueError, IndexError):
                     results.append({'file' : fp, 'status' : 'Invalid file data'})
