@@ -1,7 +1,9 @@
 import pandas as pd
-from ..model.iepf2UploadModel import IEPF2Model
+from pandas.tseries.offsets import DateOffset
 from dotenv import load_dotenv
 import os
+
+from ..model.iepf2UploadModel import IEPF2Model
 
 load_dotenv()
 
@@ -31,48 +33,53 @@ class IEPF2Controller:
 
     def insert_excel_data(self, file_paths, file_type):
         results = []
-        # try:
-        for fp in file_paths:
-            file_extension = fp.split('.')[-1]
-            if file_extension == 'xlsx' or file_extension == 'xls':
+        try:
+            for fp in file_paths:
+                file_extension = fp.split('.')[-1]
+                if file_extension == 'xlsx' or file_extension == 'xls':
 
-                #Check excel file
-                try:
-                    row_a = pd.read_excel(fp, skiprows=0, usecols='A', nrows=MAX_DUPLICATE_ROW, header=None, names=["Value"], sheet_name = VALID_SHEET_NAME)['Value']
-                    skip_row = row_a[row_a == ACTIVE_ROW_IDENTITY].index[0]
+                    #Check excel file
+                    try:
+                        row_a = pd.read_excel(fp, skiprows=0, usecols='A', nrows=MAX_DUPLICATE_ROW, header=None, names=["Value"], sheet_name = VALID_SHEET_NAME)['Value']
+                        skip_row = row_a[row_a == ACTIVE_ROW_IDENTITY].index[0]
 
-                    excel_file = pd.ExcelFile(fp)
-                    excel_data = excel_file.parse(sheet_name=VALID_SHEET_NAME, skiprows=skip_row)
-                    columns = excel_data.columns
+                        excel_file = pd.ExcelFile(fp)
+                        excel_data = excel_file.parse(sheet_name=VALID_SHEET_NAME, skiprows=skip_row)
+                        columns = excel_data.columns
+                            
+                        change_columns = {}
+                        for i in range(len(columns)):
+                            change_columns[columns[i]] = self.db_columns[i]
+
+                        excel_data.rename(columns = change_columns, inplace = True)
+                        excel_data[self.db_columns[15]] = pd.to_datetime(excel_data[self.db_columns[15]])
+                        if(len(columns)>16):
+                            excel_data[self.db_columns[17]] = pd.to_datetime(excel_data[self.db_columns[17]])
+
+                        cin = excel_file.parse(sheet_name=VALID_SHEET_NAME, skiprows=CIN_ROW-1, usecols=CIN_COLUMN, nrows=1, header=None, names=["Value"]).iloc[0]["Value"]
+                        excel_data[self.db_columns[25]] = cin
+
+                        excel_data['proposeddateoftransfer_start'] = excel_data['proposeddateoftransfer']+DateOffset(years=-7,months=-4)
+                        excel_data['proposeddateoftransfer_end'] = excel_data['proposeddateoftransfer']+DateOffset(years=-7)
+
+                        result = self.iepf2model.insert_excel_data(excel_data, cin)
+                        log_result = self.insert_excel_log(fp.split("/")[-1], file_type, 'admin')
+                        processer_result = self.iepf2model.iepf2_processer(fp.split("/")[-1])
+
+                        results.append({'file' : fp, 'status' : 'File uploaded successfully', 'data' : [result, log_result, processer_result.to_dict('list')]})
+
+                    except (ValueError, IndexError):
+                        results.append({'file' : fp, 'status' : 'Invalid file data'})
                         
-                    change_columns = {}
-                    for i in range(len(columns)):
-                        change_columns[columns[i]] = self.db_columns[i]
+                    except:
+                        results.append({'file' : fp, 'status' : 'Something went wrong!'})
 
-                    excel_data.rename(columns = change_columns, inplace = True)
-                    excel_data[self.db_columns[15]] = pd.to_datetime(excel_data[self.db_columns[15]])
-                    if(len(columns)>16):
-                        excel_data[self.db_columns[17]] = pd.to_datetime(excel_data[self.db_columns[17]])
-                    excel_data[self.db_columns[25]] = excel_file.parse(sheet_name=VALID_SHEET_NAME, skiprows=CIN_ROW-1, usecols=CIN_COLUMN, nrows=1, header=None, names=["Value"]).iloc[0]["Value"]
-
-                    result = self.iepf2model.insert_excel_data(excel_data)
-                    log_result = self.insert_excel_log(fp.split("/")[-1], file_type, 'admin')
-                    processer_result = self.iepf2model.iepf2_processer(fp.split("/")[-1])
-
-                    results.append({'file' : fp, 'status' : 'File uploaded successfully', 'data' : [result, log_result, processer_result.to_dict('list')]})
-
-                except (ValueError, IndexError):
-                    results.append({'file' : fp, 'status' : 'Invalid file data'})
-                    
-                # except:
-                #     results.append({'file' : fp, 'status' : 'Something went wrong!'})
-
-            else:
-                results.append({'file' : fp, 'status' : 'Invalid file type'})
-            
-        return {'message':'success', 'data':results}   
-        # except:
-        #     return {'message':'error', 'data':results} 
+                else:
+                    results.append({'file' : fp, 'status' : 'Invalid file type'})
+                
+            return {'message':'success', 'data':results}   
+        except:
+            return {'message':'error', 'data':results} 
 
 
 
