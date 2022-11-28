@@ -1,6 +1,7 @@
 import pandas as pd
 from pandas.tseries.offsets import DateOffset
 from dotenv import load_dotenv
+from datetime import datetime
 import os
 
 from ..model.iepf2UploadModel import IEPF2Model
@@ -36,8 +37,11 @@ class IEPF2Controller:
         try:
             for fp in file_paths:
                 file_extension = fp.split('.')[-1]
-                if file_extension == 'xlsx' or file_extension == 'xls':
+                file_name = fp.split("/")[-1]
 
+                if file_extension == 'xlsx' or file_extension == 'xls':
+                    
+                    print(file_name, "start :", datetime.now())
                     #Check excel file
                     try:
                         row_a = pd.read_excel(fp, skiprows=0, usecols='A', nrows=MAX_DUPLICATE_ROW, header=None, names=["Value"], sheet_name = VALID_SHEET_NAME)['Value']
@@ -59,26 +63,35 @@ class IEPF2Controller:
                         cin = excel_file.parse(sheet_name=VALID_SHEET_NAME, skiprows=CIN_ROW-1, usecols=CIN_COLUMN, nrows=1, header=None, names=["Value"]).iloc[0]["Value"]
                         excel_data[self.db_columns[25]] = cin
 
+                        # remove non-share assets 
+                        excel_data = excel_data[excel_data['investmenttype'] == 'Amount for unclaimed and unpaid dividend']
+
+                        # add proposeddateoftransfer_start and proposeddateoftransfer_end column
                         excel_data['proposeddateoftransfer_start'] = excel_data['proposeddateoftransfer']+DateOffset(years=-7,months=-4)
                         excel_data['proposeddateoftransfer_end'] = excel_data['proposeddateoftransfer']+DateOffset(years=-7)
 
-                        result = self.iepf2model.insert_excel_data(excel_data, cin)
-                        log_result = self.insert_excel_log(fp.split("/")[-1], file_type, 'admin')
-                        processer_result = self.iepf2model.iepf2_processer(fp.split("/")[-1])
+                        log_result = self.insert_excel_log(file_name, file_type, 'admin')
+                        result = self.iepf2model.insert_excel_data(excel_data, cin, file_name)
 
-                        results.append({'file' : fp, 'status' : 'File uploaded successfully', 'data' : [result, log_result, processer_result.to_dict('list')]})
+                        print(file_name, 'inserted :', datetime.now())
+
+                        processer_result = self.iepf2model.iepf2_processer()
+                        # processer_result.to_dict('list')
+
+                        print(file_name, "end :", datetime.now())
+                        results.append({'file' : file_name, 'status' : 'File uploaded successfully', 'data' : [result, processer_result.to_dict('list')]})
 
                     except (ValueError, IndexError):
-                        results.append({'file' : fp, 'status' : 'Invalid file data'})
+                        results.append({'file' : file_name, 'status' : 'Invalid file data'})
                         
-                    except:
-                        results.append({'file' : fp, 'status' : 'Something went wrong!'})
+                    except ValueError:
+                        results.append({'file' : file_name, 'status' : 'Something went wrong!'})
 
                 else:
-                    results.append({'file' : fp, 'status' : 'Invalid file type'})
+                    results.append({'file' : file_name, 'status' : 'Invalid file type'})
                 
             return {'message':'success', 'data':results}   
-        except:
+        except ValueError:
             return {'message':'error', 'data':results} 
 
 

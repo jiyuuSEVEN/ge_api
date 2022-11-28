@@ -8,6 +8,6 @@ def create_app():
     app.register_blueprint(site)
     
     if __name__ == '__main__':
-        app.run(debug = True)
+        app.run()
 
     return app
