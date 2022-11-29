@@ -33,4 +33,4 @@ def upload_file():
 
 @api.route('/multiple-dividend', methods = ['POST'])
 def multiple_dividend():
-    pass
+    return request.json
