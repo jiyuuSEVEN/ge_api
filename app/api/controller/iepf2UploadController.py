@@ -41,7 +41,11 @@ class IEPF2Controller:
 
                 if file_extension == 'xlsx' or file_extension == 'xls':
                     
-                    print(file_name, "start :", datetime.now())
+                    print("\t-", file_name, "started  :", datetime.now())
+                    if(self.iepf2model.check_filename(file_name) == 1):
+                        results.append({'file' : file_name, 'status' : 'File already uploaded'})
+                        continue
+
                     #Check excel file
                     try:
                         row_a = pd.read_excel(fp, skiprows=0, usecols='A', nrows=MAX_DUPLICATE_ROW, header=None, names=["Value"], sheet_name = VALID_SHEET_NAME)['Value']
@@ -73,25 +77,26 @@ class IEPF2Controller:
                         log_result = self.insert_excel_log(file_name, file_type, 'admin')
                         result = self.iepf2model.insert_excel_data(excel_data, cin, file_name)
 
-                        print(file_name, 'inserted :', datetime.now())
+                        print("\t-", file_name, 'inserted :', datetime.now())
 
                         processer_result = self.iepf2model.iepf2_processer()
-                        # processer_result.to_dict('list')
+                        # 'data' : [result, processer_result.to_dict('list')]
 
-                        print(file_name, "end :", datetime.now())
-                        results.append({'file' : file_name, 'status' : 'File uploaded successfully', 'data' : [result, processer_result.to_dict('list')]})
+                        print("\t-", file_name, "ended   :", datetime.now())
+                        print("\n\t--------------------------------------------------------------\n")
+                        results.append({'file' : file_name, 'status' : 'File uploaded successfully', 'data' : [result]})
 
                     except (ValueError, IndexError):
                         results.append({'file' : file_name, 'status' : 'Invalid file data'})
                         
-                    except ValueError:
+                    except:
                         results.append({'file' : file_name, 'status' : 'Something went wrong!'})
 
                 else:
                     results.append({'file' : file_name, 'status' : 'Invalid file type'})
                 
             return {'message':'success', 'data':results}   
-        except ValueError:
+        except: 
             return {'message':'error', 'data':results} 
 
 

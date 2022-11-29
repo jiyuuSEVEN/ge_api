@@ -30,3 +30,7 @@ def upload_file():
             result = { "data": [], "message": "wrong file type"} 
 
         return result
+
+@api.route('/multiple-dividend', methods = ['POST'])
+def multiple_dividend():
+    pass
